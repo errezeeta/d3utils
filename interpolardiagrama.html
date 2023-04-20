@@ -6,6 +6,7 @@
 <script src="https://unpkg.com/bicubic-interpolate@^1.0.0/dist/min.js"></script>
 <script src="stack-blur.js"></script>
 <script src="https://d3js.org/d3.v6.min.js"></script>
+<script src="./conrec.js-master/conrec.js"></script>
 <script src="./PapaParse-5.4.0/papaparse.min.js"></script>
 <div id="my_dataviz"></div>
 <script>
@@ -52,7 +53,13 @@ var Q12 =0;
 var Q21 =0;
 var dades;
 var Q22 =0;
-var arrData
+var arrData;
+var xs = [];
+var ys= [];
+var arrContour = [];
+var posCont1 = 0;
+var posCont2 = 0;
+var primero = true;
 Papa.parse('./manual.csv', {
   download: true,
   header: false,
@@ -61,10 +68,14 @@ Papa.parse('./manual.csv', {
     arrData.shift();
     console.log(arrData)
     for(i=-1; i<=1; i= i+(1/150)) {
+      arrContour.push();
+      posCont1++;
+      posCont2 = 0;
       for(j=-1; j<=1; j= j+(1/150)) {
         var coords = getCoords(i,j);
         if (coords[1] >=0 && coords[1]<=360) {
           valor = interpolar(coords[0],coords[1]);
+          arrContour[posCont1].push(valor)
           diagram = d3.select("g")
           .append("rect")
             .attr("x", function() {return x(i)})
@@ -73,10 +84,14 @@ Papa.parse('./manual.csv', {
             .attr("height", function() { return 2 })
             .style("fill", function() {return myColor(valor)})
         }
-
+        else {
+          arrContour[posCont1][posCont2] = 50;
+        }
+        posCont2++;
       }
 
     }
+    console.log(arrContour)
   }
 });
 setTimeout(() => {
@@ -196,6 +211,11 @@ function interpolar(az,al) {
     const marg = obtenerMargen(az);
     for(k=marg[0]; k<=marg[1] && k <=129600; k++) {
       if (arrData[k][1]== al) {
+        return arrData[k][3]
+      }
+    }
+    for (k=0; k<180; k++) {
+      if(arrData[k][1]==al) {
         return arrData[k][3]
       }
     }
