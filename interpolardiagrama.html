@@ -1,239 +1,267 @@
 <!DOCTYPE html>
-<script src="https://unpkg.com/d3-contour@1"></script>
-<script src="https://unpkg.com/d3-geo@1"></script>
-<script src="https://unpkg.com/d3-timer@1"></script>
-<script src="https://d3js.org/d3-request.v1.min.js"></script>
-<script src="https://unpkg.com/bicubic-interpolate@^1.0.0/dist/min.js"></script>
-<script src="stack-blur.js"></script>
-<script src="https://d3js.org/d3.v6.min.js"></script>
-<script src="./conrec.js-master/conrec.js"></script>
-<script src="./PapaParse-5.4.0/papaparse.min.js"></script>
-<div id="my_dataviz"></div>
-<script>
-  // Dimensions de la figura
-var margin = {top: 0, right: 0, bottom: 0, left: 0},
-  width = 600 - margin.left - margin.right,
-  height = 600 - margin.top - margin.bottom;
-
-// Append del svg a la pagina
-var svg = d3.select("#my_dataviz")
-.append("svg")
-  .attr("width", width + margin.left + margin.right)
-  .attr("height", height + margin.top + margin.bottom)
-.append('g')
-  .attr("transform",
-        "translate(" + margin.left + "," + margin.top + ")");
-
-var x = d3.scaleLinear()
-  .range([ 0, width ])
-  .domain([-1,1]);
-svg.append("g")
-  .attr("transform", "translate(0," + height + ")")
-  .call(d3.axisBottom(x));
-
-var y = d3.scaleLinear()
-  .range([ height, 0 ])
-  .domain([-1,1]);
-svg.append("g")
-  .call(d3.axisLeft(y));
-
-////////////////SELECCIÓ DEL DOMINI DE LA ESCALA DE COLOR ///////////////////////////
-var myColor = d3.scaleSequential()
-    .interpolator(d3.interpolateSinebow)
-    .domain([14,24]);
-
-
-var xs= [];
-var ys= [];
-var values= [];
-var j = 0;
-var point = 0;
-var Q11 =0;
-var Q12 =0;
-var Q21 =0;
-var dades;
-var Q22 =0;
-var arrData;
-var xs = [];
-var ys= [];
-var arrContour = [];
-var posCont1 = 0;
-var posCont2 = 0;
-var primero = true;
-Papa.parse('./manual.csv', {
-  download: true,
-  header: false,
-  complete: function(results) {
-    arrData = results.data;
-    arrData.shift();
-    console.log(arrData)
-    for(i=-1; i<=1; i= i+(1/150)) {
-      arrContour.push();
-      posCont1++;
-      posCont2 = 0;
-      for(j=-1; j<=1; j= j+(1/150)) {
-        var coords = getCoords(i,j);
-        if (coords[1] >=0 && coords[1]<=360) {
-          valor = interpolar(coords[0],coords[1]);
-          arrContour[posCont1].push(valor)
-          diagram = d3.select("g")
-          .append("rect")
-            .attr("x", function() {return x(i)})
-            .attr("y", function() {return y(j)})
-            .attr("width", function() { return  2 })
-            .attr("height", function() { return 2 })
-            .style("fill", function() {return myColor(valor)})
-        }
-        else {
-          arrContour[posCont1][posCont2] = 50;
-        }
-        posCont2++;
-      }
-
-    }
-    console.log(arrContour)
-  }
-});
-setTimeout(() => {
-  console.log(arrData);
-}, 5000);
-// d3.csv("./manual.csv").then(function(data) {
-
-//   //Dos bucles que emplenaran tot el diagrama
-//   for(i=-1; i<=1; i= i+(1/150)) {
-//     for(j=-1; j<=1; j= j+(1/150)) {
-//       var coords = getCoords(i,j);
-//       //console.log(coords[0]+" "+coords[1]+" cuando la entrada era "+i+" y "+j);
-//       if (coords[1] >=0) {
-//         // valor = interpolar(coords[0],coords[1]);
-//         diagram = d3.select("g")
-//       .append("rect")
-//       .attr("x", function() {return x(i)})
-//       .attr("y", function() {return y(j)})
-//       .attr("width", function() { return  2 } )
-//       .attr("height", function() { return 2 } )
-//       .style("fill", function() { return "red"} )
-//       }
-//     }
-
-//   }
-//   ////////////////////AFEGIM LA INFORMACIÓ AL DIAGRAMA/////////////////////////
-
-//   // var coords = getCoords( 0.18288608937319462, 0.7473937592729816);
-//   // console.log(`Tengo ${coords[0]} y ${coords[1]}`);
-
-
-
-//   // interpolar(0.2509,0.7509);
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interp</title>
+</head>
+<body>
+  <script src="https://unpkg.com/d3-contour@1"></script>
+  <script src="https://unpkg.com/d3-geo@1"></script>
+  <link rel="icon" href="data:;base64,=">
+  <script src="https://unpkg.com/d3-timer@1"></script>
+  <script src="https://d3js.org/d3-request.v1.min.js"></script>
+  <script src="https://unpkg.com/bicubic-interpolate@^1.0.0/dist/min.js"></script>
+  <script src="https://d3js.org/d3.v6.min.js"></script>
+  <script src="./PapaParse-5.0.2/papaparse.min.js"></script>
+  <script src="./Conrec/conrec.js"></script>
+  <div id="my_dataviz"></div>
+  <script>
+    // Dimensions de la figura
+  var margin = {top: 0, right: 0, bottom: 0, left: 0},
+    width = 600 - margin.left - margin.right,
+    height = 600 - margin.top - margin.bottom;
   
-  // function interpolar(az,al) {
-  //   var intAz = encontrarIntervalo(az);
-  //   var intAl = encontrarIntervalo(al);
+  // Append del svg a la pagina
+  var svg = d3.select("#my_dataviz")
+  .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append('g')
+    .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+  
+  var x = d3.scaleLinear()
+    .range([ 0, width ])
+    .domain([-1,1]);
+  svg.append("g")
+    .attr("transform", "translate(0," + height + ")")
+    .call(d3.axisBottom(x));
+  
+  var y = d3.scaleLinear()
+    .range([ height, 0 ])
+    .domain([-1,1]);
+  svg.append("g")
+    .call(d3.axisLeft(y));
+  
+  ////////////////SELECCIÓ DEL DOMINI DE LA ESCALA DE COLOR ///////////////////////////
+  var myColor = d3.scaleSequential()
+      .interpolator(d3.interpolateSinebow)
+      .domain([14,24]);
+  
+  
+  var xs= [];
+  var ys= [];
+  var values= [];
+  var j = 0;
+  var point = 0;
+  var Q11 =0;
+  var Q12 =0;
+  var Q21 =0;
+  var dades;
+  var Q22 =0;
+  var arrData;
+  var xs = [];
+  var ys= [];
+  var arrContour = [];
+  var posContour = 0;
+  var primero = true;
+  Papa.parse('./manual.csv', {
+    download: true,
+    header: false,
+    complete: function(results) {
+      arrData = results.data;
+      arrData.shift();
+      console.log(arrData);
+      for(i=-1; i<=1; i= i+(1/150)) {
+        arrContour.push([]);
+        for(j=-1; j<=1; j= j+(1/150)) {
+          var coords = getCoords(i,j);
+          if (coords[1] >=0 && coords[1]<=360) {
+            valor = interpolar(coords[0],coords[1]);
+            arrContour[posContour].push(valor);
+            diagram = d3.select("g")
+            .append("rect")
+              .attr("x", function() {return x(i)})
+              .attr("y", function() {return y(j)})
+              .attr("width", function() { return  2 })
+              .attr("height", function() { return 2 })
+              .style("fill", function() {return myColor(valor)})
+          }
+          else {
+            arrContour[posContour].push(50);
+          }
+        }
+        posContour++;
+      }
+      var c = new Conrec,
+        xs = d3.range(0, arrContour.length),
+        ys = d3.range(0, arrContour[0].length),
+        zs = d3.range(14, 23, 1),
+        width = 600,
+        height = 600,
+        xc = d3.scaleLinear().range([0, width]).domain([0, arrContour.length]),
+        yc = d3.scaleLinear().range([height, 0]).domain([0,arrContour[0].length]),
+        colours2 = d3.scaleLinear().domain([14,23]).range(["blue","red"]);
 
-  //   return bilinear(intAz[0],intAz[1],intAl[0],intAl[1],az,al);
-  // }
-//   function buscaValores(x1, x2, y1, y2) {
-//     var bool1 = false;
-//     var bool2 = false;
-//     var bool3 = false;
-//     var bool4 = false;
+      c.contour(arrContour, 0, xs.length -1, 0, ys.length -1, xs, ys, zs.length, zs);
 
-//     data.map(function(d) {
-//       if (d['Azimuth']==x1 && d['Altitude']==y1) {
-//         Q11 = +d['mag_V']
-//         bool1 = true;
-//       }
-//       if (d['Azimuth']==x1 && d['Altitude']==y2) {
-//         Q12 = +d['mag_V']
-//       }
-//       if (d['Azimuth']==x2 && d['Altitude']==y1) {
-//         Q21 = +d['mag_V']
-//       }
-//       if (d['Azimuth']==x2 && d['Altitude']==y2) {
-//         Q22 = +d['mag_V']
-//       }
-//     });
-//   }
-  // function bilinear(x1, x2, y1, y2, x,y) {
-  //   buscaValores(x1,x2,y1,y2);
-  //   R1 = (((x2-x)/0.5)*Q11)+(((x-x1)/0.5)*Q21);
-  //   R2 = (((x2-x)/0.5)*Q12)+(((x-x1)/0.5)*Q22);
-  //   P =  (((y2 - y)/0.5)*R1)+(((y-y1)/0.5)*R2);
-  //   return P;
+      d3.select("g")
+        .selectAll("path")
+          .data(c.contourList())
+          .enter().append("path")
+          .style("fill", function(d) {return colours2(d.level);})
+          .style("stroke","black")
+          .attr("d", d3.line()
+          .x(function(d) { return xc(d.x);})
+          .y(function(d) { return yc(d.y);}));
+    }
+  });
+  setTimeout(() => {
+    console.log(arrData);
+  }, 5000);
+  // d3.csv("./manual.csv").then(function(data) {
+  
+  //   //Dos bucles que emplenaran tot el diagrama
+  //   for(i=-1; i<=1; i= i+(1/150)) {
+  //     for(j=-1; j<=1; j= j+(1/150)) {
+  //       var coords = getCoords(i,j);
+  //       //console.log(coords[0]+" "+coords[1]+" cuando la entrada era "+i+" y "+j);
+  //       if (coords[1] >=0) {
+  //         // valor = interpolar(coords[0],coords[1]);
+  //         diagram = d3.select("g")
+  //       .append("rect")
+  //       .attr("x", function() {return x(i)})
+  //       .attr("y", function() {return y(j)})
+  //       .attr("width", function() { return  2 } )
+  //       .attr("height", function() { return 2 } )
+  //       .style("fill", function() { return "red"} )
+  //       }
+  //     }
+  
   //   }
-// });
-
-function getCoords(x,y) {
-  var PI_2 = Math.PI / 2.
-  var el = PI_2*(1.-Math.sqrt(x*x+y*y));
-  var az = Math.atan2(y,x);
-  az = az-PI_2;
-  if (az<0) {
-    az=az+2.*Math.PI;
-  }
-  az = toDec(az);
-  el = toDec(el);
-  return [az, el];
-}
-function toDec(n) {
-  return (180/Math.PI)*n;
-}
-function encontrarIntervalo(numero) { //Retorna un array con el intervalo al que pertenece el valor en el csv [0] el inferior y [1] el superior
-    var inicio = Math.floor(numero * 2) / 2 + 0.25;
-    var fin = inicio + 0.5;
+  //   ////////////////////AFEGIM LA INFORMACIÓ AL DIAGRAMA/////////////////////////
   
-    return [inicio,fin];
-}
-
-function interpolar(az,al) {
-    var x = encontrarIntervalo(az);
-    var y = encontrarIntervalo(al);
-    const Q11 = parseFloat(buscaValores(x[0], y[0]));
-    const Q12 = parseFloat(buscaValores(x[0], y[1]));
-    const Q21 = parseFloat(buscaValores(x[1], y[0]));
-    const Q22 = parseFloat(buscaValores(x[1], y[1]));
-
-    R1 = (((x[1]-az)/0.5)*Q11)+(((az-x[0])/0.5)*Q21);
-    R2 = (((x[1]-az)/0.5)*Q12)+(((az-x[0])/0.5)*Q22);
-    P =  (((y[1] - al)/0.5)*R1)+(((al-y[0])/0.5)*R2);
-    return P;
-  }
-
-  function bilinear(x1, x2, y1, y2, x,y) {
-    buscaValores(x1,x2,y1,y2);
-    R1 = (((x2-x)/0.5)*Q11)+(((x-x1)/0.5)*Q21);
-    R2 = (((x2-x)/0.5)*Q12)+(((x-x1)/0.5)*Q22);
-    P =  (((y2 - y)/0.5)*R1)+(((y-y1)/0.5)*R2);
-    return P;
+  //   // var coords = getCoords( 0.18288608937319462, 0.7473937592729816);
+  //   // console.log(`Tengo ${coords[0]} y ${coords[1]}`);
+  
+  
+  
+  //   // interpolar(0.2509,0.7509);
+    
+    // function interpolar(az,al) {
+    //   var intAz = encontrarIntervalo(az);
+    //   var intAl = encontrarIntervalo(al);
+  
+    //   return bilinear(intAz[0],intAz[1],intAl[0],intAl[1],az,al);
+    // }
+  //   function buscaValores(x1, x2, y1, y2) {
+  //     var bool1 = false;
+  //     var bool2 = false;
+  //     var bool3 = false;
+  //     var bool4 = false;
+  
+  //     data.map(function(d) {
+  //       if (d['Azimuth']==x1 && d['Altitude']==y1) {
+  //         Q11 = +d['mag_V']
+  //         bool1 = true;
+  //       }
+  //       if (d['Azimuth']==x1 && d['Altitude']==y2) {
+  //         Q12 = +d['mag_V']
+  //       }
+  //       if (d['Azimuth']==x2 && d['Altitude']==y1) {
+  //         Q21 = +d['mag_V']
+  //       }
+  //       if (d['Azimuth']==x2 && d['Altitude']==y2) {
+  //         Q22 = +d['mag_V']
+  //       }
+  //     });
+  //   }
+    // function bilinear(x1, x2, y1, y2, x,y) {
+    //   buscaValores(x1,x2,y1,y2);
+    //   R1 = (((x2-x)/0.5)*Q11)+(((x-x1)/0.5)*Q21);
+    //   R2 = (((x2-x)/0.5)*Q12)+(((x-x1)/0.5)*Q22);
+    //   P =  (((y2 - y)/0.5)*R1)+(((y-y1)/0.5)*R2);
+    //   return P;
+    //   }
+  // });
+  
+  function getCoords(x,y) {
+    var PI_2 = Math.PI / 2.
+    var el = PI_2*(1.-Math.sqrt(x*x+y*y));
+    var az = Math.atan2(y,x);
+    az = az-PI_2;
+    if (az<0) {
+      az=az+2.*Math.PI;
     }
-
-  function buscaValores(az, al) {
-    const marg = obtenerMargen(az);
-    for(k=marg[0]; k<=marg[1] && k <=129600; k++) {
-      if (arrData[k][1]== al) {
-        return arrData[k][3]
+    az = toDec(az);
+    el = toDec(el);
+    return [az, el];
+  }
+  function toDec(n) {
+    return (180/Math.PI)*n;
+  }
+  function encontrarIntervalo(numero) { //Retorna un array con el intervalo al que pertenece el valor en el csv [0] el inferior y [1] el superior
+      var inicio = Math.floor(numero * 2) / 2 + 0.25;
+      var fin = inicio + 0.5;
+    
+      return [inicio,fin];
+  }
+  
+  function interpolar(az,al) {
+      var x = encontrarIntervalo(az);
+      var y = encontrarIntervalo(al);
+      const Q11 = parseFloat(buscaValores(x[0], y[0]));
+      const Q12 = parseFloat(buscaValores(x[0], y[1]));
+      const Q21 = parseFloat(buscaValores(x[1], y[0]));
+      const Q22 = parseFloat(buscaValores(x[1], y[1]));
+  
+      R1 = (((x[1]-az)/0.5)*Q11)+(((az-x[0])/0.5)*Q21);
+      R2 = (((x[1]-az)/0.5)*Q12)+(((az-x[0])/0.5)*Q22);
+      P =  (((y[1] - al)/0.5)*R1)+(((al-y[0])/0.5)*R2);
+      return P;
+    }
+  
+    function bilinear(x1, x2, y1, y2, x,y) {
+      buscaValores(x1,x2,y1,y2);
+      R1 = (((x2-x)/0.5)*Q11)+(((x-x1)/0.5)*Q21);
+      R2 = (((x2-x)/0.5)*Q12)+(((x-x1)/0.5)*Q22);
+      P =  (((y2 - y)/0.5)*R1)+(((y-y1)/0.5)*R2);
+      return P;
+      }
+  
+    function buscaValores(az, al) {
+      const marg = obtenerMargen(az);
+      for(k=marg[0]; k<=marg[1] && k <=129600; k++) {
+        if (arrData[k][1]== al) {
+          return arrData[k][3]
+        }
+      }
+      for (k=0; k<180; k++) {
+        if(arrData[k][1]==al) {
+          return arrData[k][3]
+        }
       }
     }
-    for (k=0; k<180; k++) {
-      if(arrData[k][1]==al) {
-        return arrData[k][3]
-      }
-    }
+    function obtenerMargen(valor) {
+    // Verificar si el valor es válido
+    // if (valor < 0.0 || valor > 360) {
+    //   console.error("El valor debe estar entre 0.2500 y 360 y ha entrado"+valor);
+    //   return null;
+    // }
+  
+    // Calcular el margen correspondiente
+    var valorBase = 0.2500;
+    var incremento = 0.5000;
+    var indice = Math.floor((valor - valorBase) / incremento);
+    var inicio = indice * 180;
+    var fin = inicio + 179;
+    return [inicio, fin];
   }
-  function obtenerMargen(valor) {
-  // Verificar si el valor es válido
-  // if (valor < 0.0 || valor > 360) {
-  //   console.error("El valor debe estar entre 0.2500 y 360 y ha entrado"+valor);
-  //   return null;
-  // }
+  
+  </script>
+  
+</body>
+</html>
 
-  // Calcular el margen correspondiente
-  var valorBase = 0.2500;
-  var incremento = 0.5000;
-  var indice = Math.floor((valor - valorBase) / incremento);
-  var inicio = indice * 180;
-  var fin = inicio + 179;
-  return [inicio, fin];
-}
-
-</script>
